@@ -27,7 +27,7 @@ class AddressBook(UserDict):
             del self.data[record_id]
 
     def get(self, record_id: uuid.UUID) -> Record:
-        return self.data.get(record_id)
+        return self.data[record_id]
     
     def get_all(self) -> dict:
         return self.data.copy # Because I don't want to get access to the whole list

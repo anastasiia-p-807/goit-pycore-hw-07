@@ -1,5 +1,6 @@
 from datetime import datetime
 from AddressBook import AddressBook
+from Birthday import Birthday, BirthdayValidtionException
 from Name import Name
 from NewRecord import NewRecord
 from Phone import Phone
@@ -8,35 +9,50 @@ from Record import Record
 
 addressBook = AddressBook()
 
+
+def input_error(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as ex:
+                print(f"Log Error: {str(ex)}")
+                raise ex from None
+        return wrapper
+    
+@input_error
 def add(args: list) -> Record: # args expected to be: 'Name Phone'
     if len(args) < 2:
         user_input = input("Please provide a name and a new phone number (e.g. 'John 1234567890'): ")
         args = user_input.split()
     
     name, phone = args[0].rstrip(), args[1].rstrip()
+    new_phone = Phone(phone) # Phone has validation, exception may occur 
     record = addressBook.find(name)
     if record:
-        record.add_phone(phone)
+        record.add_phone(new_phone)
         return addressBook.update(record)
     else: 
-        return addressBook.add(NewRecord(name=Name(name), phones=[Phone(phone)]))
+        return addressBook.add(NewRecord(name=Name(name), phones=[new_phone]))
 
-def edit_phone(args: list) -> Record: # args expected to be: 'Name OldPhone NewPhone'
+@input_error 
+def update_phone(args: list) -> Record: # args expected to be: 'Name OldPhone NewPhone'
     if len(args) < 2:
         user_input = input("Please provide an existing name, phone and a new phone (e.g. 'John 123456 789034'): ")
         args = user_input.split()
     
     name, old_phone, new_phone = args[0].rstrip(), args[1].rstrip()
     record = addressBook.find(name)
-    if record.edit_phone(old_phone, new_phone):
-        return addressBook.update(record)
+    if record.edit_phone(Phone(old_phone), Phone(new_phone)): # Phone has validation, exception may occur 
+        return addressBook.update(record) # exception may occur if record is not found 
     return None
 
+@input_error 
 def get(args: list) -> Record: # args expected to be: 'Name'
+    name = None
     if len(args) < 1:
-        user_input = input("Please provide an existing name (e.g. 'John'): ")
-        args = user_input.rstrip()
-    name = args[0]
+        name = input("Please provide an existing name (e.g. 'John'): ")
+    else:
+        name = args[0]
     return addressBook.find(name)
 
 def print_all() -> str:
@@ -44,45 +60,31 @@ def print_all() -> str:
         return "Empty list."
     print('\n'.join(f"{record}" for record in addressBook.get_all()))
 
-def input_error(func):
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                return f"Error: {str(e)}"
-        return wrapper
-
-# to do this
 @input_error
-def add_birthday(args):
+def add_birthday(args): # args expected to be: 'Name DD.MM.YYYY'
     if len(args) < 2:
-        user_input = input("Please provide a name and a new phone number (e.g. 'John 1234567890'): ")
+        user_input = input("Please provide a name and date (e.g. 'John DD.MM.YYYY'): ")
         args = user_input.split()
     
-    name, phone = args[0].rstrip(), args[1].rstrip()
-    contacts[name] = phone
-    return "Contact added."
-
-    try:
-        name, date_str = args.split()
-        record = book.find(name)
-        if not record:
-            return "Contact not found."
-        birthday = datetime.strptime(date_str, "%d.%m.%Y")
-        record.birthday = birthday
-        return f"Birthday added for {name}: {date_str}"
-    except ValueError:
-        return "Please provide the date in DD.MM.YYYY format."
+    name, date = args[0].rstrip(), args[1].rstrip()
+    record = addressBook.find(name)
+    if record is None:
+        raise KeyError("Record not found.") 
+    birthday = Birthday(date) # Birthday has validation, exception may occur
+    record.set_birthday(birthday)
+    addressBook.update(record) # exception may occur if record is not found 
 
 @input_error
-def show_birthday(args, book):
-        # реалізація
-
-@input_error
-def birthdays(args, book):
-        # реалізація
-
-
+def get_birthday(args) -> Birthday: # args expected to be: 'Name'
+    name = None
+    if len(args) < 1:
+        name = input("Please provide an existing name (e.g. 'John'): ")
+    else:
+        name = args[0]
+    record = addressBook.find(name)
+    if record is None:
+        raise KeyError("Record not found.") 
+    return record.birthday
 
 def main():
     print("Welcome to the assistant bot!")
@@ -96,21 +98,21 @@ def main():
             elif command in ["close", "exit", "bye", "disappear"]:
                 print("Good bye!")
                 break
-            elif command in ["new", "add"]:
+            elif command in ["new", "add"]: #Додати або новий контакт з іменем та телефонним номером, або телефонний номер к контакту який вже існує
                 record = add(args)
                 print(f"Contact added: {record}")
-            elif command in ["change", "update"]:
-                record = edit_phone(args)
+            elif command in ["change", "update"]: #Змінити телефонний номер для вказаного контакту.
+                record = update_phone(args)
                 print(f"Contact updated: {record}")
-            elif command in ["get", "get phone", "find"]:
+            elif command in ["get", "phone", "get phone", "find"]: #Показати телефонні номери для вказаного контакту.
                 record = get(args)
                 print(f"Record: {record}")
-            elif command in ["all", "show"]:
+            elif command in ["all", "show all", "get all"]:
                 print_all()
-            elif command == "add-birthday":
+            elif command == "add-birthday": #Додати дату народження для вказаного контакту.
                 add_birthday(args)
             elif command == "show-birthday":
-                show_birthday(args)
+                print(get_birthday(args))
             elif command == "birthdays":
                 records = addressBook.get_upcoming_birthdays()
                 print(records)

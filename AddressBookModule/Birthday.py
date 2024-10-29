@@ -8,4 +8,12 @@ class Birthday(str):
         try:
             self.value = datetime.strptime(self.value, "%d.%m.%Y")
         except ValueError:
-            raise ValueError("Invalid date format. Use DD.MM.YYYY")
+            raise BirthdayValidtionException("Invalid date format. Use DD.MM.YYYY")
+        
+class BirthdayValidtionException(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+    def __str__(self):
+        return f"{self.message}"
