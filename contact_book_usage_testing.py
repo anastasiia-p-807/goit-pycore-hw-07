@@ -1,14 +1,16 @@
 import sys
-sys.path.append('/AddressBookModule/contact_book')
 
-from AddressBookModule import AddressBook, Record, NewRecord, Name, Phone
+from Name import Name
+from Phone import Phone
+from AddressBook import AddressBook
+from NewRecord import NewRecord
 
 # Create an instance of AddressBook
 address_book = AddressBook()
 
 # Create a new record using NewRecord
 new_record = NewRecord(name=Name("Alice"), phones=[Phone("1234567890")])
-address_book.add_record(new_record)
+address_book.add(new_record)
 
 # Find a record by name
 record = address_book.find("Alice")
@@ -18,7 +20,7 @@ print(record)  # Output: Contact name: Alice, phones: 1234567890
 if record:
     updated_record = record
     updated_record.phones = [Phone("0987654321")]
-    address_book.edit_record(updated_record)
+    address_book.update(updated_record)
 
 # Get the updated record by id and print it
 updated_record = address_book.get(record.id)
