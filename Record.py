@@ -27,13 +27,13 @@ class Record:
     def edit_phone(self, old_phone: Phone, new_phone: Phone):
         old_phone_obj = self.find_phone(old_phone)
         if not old_phone_obj:
-            raise KeyError(f"Phone of the record (name = {self.name} not found.")
+            raise KeyError(f"Phone of the record with a name = {self.name} not found.")
         self.phones.remove(old_phone_obj)
         self.add_phone(new_phone)
 
     def find_phone(self, phone: Phone) -> Phone:
         for phone_obj in self.phones:
-            if phone_obj.value == phone:
+            if phone_obj == phone:
                 return phone_obj
         return None
 
@@ -41,5 +41,8 @@ class Record:
         self.birthday = birthday
 
     def __str__(self):
-        phones = '; '.join(p.value for p in self.phones)
-        return f"Name: {self.name.value}, phones: {phones}"
+        if len(self.phones) > 0:
+            phones = '; '.join(p.phone for p in self.phones) 
+        else:
+            phones = "no phones"
+        return f"Name: {self.name}, phones: {phones}, birthday: {self.birthday}"
